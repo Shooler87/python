@@ -1,5 +1,6 @@
 import cProfile
 import calendar
+import collections
 import datetime
 import getpass
 import glob
@@ -16,6 +17,7 @@ import sys
 import time
 import traceback
 import urllib.request
+from functools import reduce
 from http.client import HTTPResponse
 from pathlib import Path
 
@@ -432,7 +434,7 @@ def numconv(numerical: str) -> int | float:
 
     if "." in numerical or "," in numerical:
         return float(numerical)
-    elif re.fullmatch("-?\d+", numerical):
+    elif re.fullmatch("-?[0-9]+", numerical):
         return int(numerical)
     else:
         return -999.999
@@ -594,6 +596,7 @@ print(sum(dictionary_.values()))
 # SKIPPED, TOO EASY
 
 # TASK 83
+# todo collections.Counter does the same
 sample = "Write a Python program to count the number of occurrences of a specific character in a string."
 occurences = dict()
 for i in sample:
@@ -728,7 +731,6 @@ print(os.path.basename(p))
 # SKIPPED, TOO EASY
 
 # TASK 108
-# SKIPPED, TOO EASY
 
 # TASK 109
 # SKIPPED, NO SOLUTION
@@ -739,42 +741,206 @@ div15 = list(filter(lambda x: (x % 15 == 0), num_list))
 print("Divisible by 15:", div15)
 
 # TASK 111
+# SKIPPED, TOO EASY
+
 # TASK 112
+a = [1, 2, 3, 4, 5, 2]
+b = a[1:]
+a.pop(0)
+a.remove(2)
+del a[0]
+print(a)
+print(b)
+
 # TASK 113
+# SKIPPED, TOO EASY
+
 # TASK 114
+a = [1, -8, 2, 3, -4, -5, -1, 99]
+print([x for x in a if x > 0])
+print(list(filter(lambda x: x > 0, a)))
+
+
 # TASK 115
+def multit(a: int, b: int) -> int:
+    return a * b
+
+
+a = [10, 20, 30]
+print(reduce(multit, a))
+print(reduce((lambda x, y: x * y), a))
+
 # TASK 116
+# SKIPPED, TOO EASY
+
 # TASK 117
+# SKIPPED, TOO EASY
+
 # TASK 118
+print(bytearray([1, 2, 3, 255]))
+
 # TASK 119
+# SKIPPED, TOO EASY
+
 # TASK 120
+t = "test"
+print(f"{t:.2s}")
+
 # TASK 121
+try:
+    x = 1
+    yyyy
+except NameError:
+    print("oops")
+
 # TASK 122
+print([type(x)() for x in ["python", {"x": 12}, [10, 12, "sfsd"], (4, 5), 200]])
+
 # TASK 123
+print(f"Int value information: {sys.int_info}\nFloat value information: {sys.float_info}\nMax int: {sys.maxsize}")
+
 # TASK 124
+a, b, c = 1, 1, 2
+print(f"{"Same value" if len({a, b, c}) == 1 else "Different values"}")
+
 # TASK 125
+num = [2, 2, 4, 6, 6, 8, 6, 10, 4]
+print(collections.Counter(num), sum(collections.Counter(num).values()))
+
 # TASK 126
+# SKIPPED, TOO EASY
+
 # TASK 127
+# int_val.bit_length()
+
 # TASK 128
+s = "The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE The Big Words Are HERE "
+# "".join(list(filter(lambda x: x == x.lower(), s*100)))
+start = time.time()
+any(x.islower() for x in s * 100000)
+end = time.time() - start
+print(end)
+start = time.time()
+for i in s * 100000:
+    if i.islower():
+        break
+end = time.time() - start
+print(end)
+
 # TASK 129
+s = "984.98"
+a = 984
+b = 984.12
+print(f"{s:-^17s}", f"{a:06}")
+print(str(a).ljust(6, "0"), str(b).rjust(9, "0"))
+print(f"{a:<08} {b:>08}")
+
+
 # TASK 130
+# todo check json dump function
+def quot(s: str) -> str:
+    return f"\"{s}\""
+
+
+print(quot("testing this"))
+
 # TASK 131
+# var_list = ['a', 'b', 'c']
+# x, y, z = (var_list + [None] * 3)[:3]
+
 # TASK 132
+# SKIPPED, SEEMED USELESS
+
 # TASK 133
+# SKIPPED, TOO EASY
+
 # TASK 134
+# s = input("Provide two integers separated by space: ")
+s = "12 66"
+try:
+    a, b = map(int, s.split())
+    print(a, b)
+except ValueError:
+    print("Next time integers only please")
+
 # TASK 135
+# SKIPPED, TOO EASY
+
 # TASK 136
+# SKIPPED, TOO EASY
+
 # TASK 137
+d = {"test": 2, "too": 5}
+a, b = "test", d.get("test")
+print(a, b)
+a, b = list(d.items())[1]
+print(a, b)
+
 # TASK 138
+print(int(True), int(False))
+
+
 # TASK 139
+def valip(ip: str) -> bool:
+    if not re.match("^([0-9]{1,3}\.){3}[0-9]{1,3}$", ip):
+        print(f"invalid {ip=} (simple regex check)")
+        return False
+    else:
+        return not False in [0 <= int(x) <= 255 for x in ip.split(".")]
+
+
+def regexvalip(ip: str) -> bool:
+    return bool(re.match("^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$", ip))
+
+
+print(valip("133.123.123.133"), regexvalip("133.123.123.133"))
+print(valip("0.0.0.0"))
+print(valip("133.123.123"))
+print(valip("133.123"))
+
 # TASK 140
+# SKIPPED, TOO EASY
+
 # TASK 141
+print(hex(100), int(0x64))
+
+
 # TASK 142
+def check(s: str) -> bool:
+    if not s.startswith("0"):
+        return False
+    pos = None
+    for i in range(len(s)):
+        # print(f"{str(i):-^7s}")
+        if s[i] == "1":
+            pos = i
+            break
+
+    # print(pos, f"^(0{{{pos}}}1{{{pos}}})+$")
+    return bool(re.match(f"^(0{{{pos}}}1{{{pos}}})+$", s))
+
+print(check("001100111"))
+
 # TASK 143
+# SKIPPED, DUPLICATE
+
 # TASK 144
+# isinstance vs type(var)
+
 # TASK 145
+# SKIPPED, TOO EASY
+
 # TASK 146
+# SKIPPED, DUPLICATE
+
 # TASK 147
+# SKIPPED, TOO EASY
+
 # TASK 148
+# SKIPPED, TOO EASY
+
 # TASK 149
+# SKIPPED, TOO EASY
+
 # TASK 150
+# SKIPPED, TOO EASY
