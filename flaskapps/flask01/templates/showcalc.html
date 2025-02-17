@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Show Calc</title>
+</head>
+<body>
+    <p>Calcs:</p>
+    <p>{{ post }}</p>
+    <p>Result:</p>
+    <p>{{ final_value }}</p>
+    {% if "calcs" in session %}
+    <p>Session:</p>
+    <p>{{ session.get("calcs") }}</p>
+    {% endif %}
+</body>
+</html>
