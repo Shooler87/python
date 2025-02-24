@@ -3,37 +3,55 @@ import logging
 from datetime import datetime
 
 from fastapi import FastAPI, Path, Query, Body, status
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, SecretStr
 from pydantic_core import ValidationError
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 from starlette.responses import JSONResponse
 
 from dummygen import Dummygen
 
-# todo async functions, motor db driver
 
+# todo async functions, motor db driver
+# todo handle exceptions chaining
+
+class Settings(BaseSettings):
+    api_name: str = "Default API"
+    api_version: str = "0.0"
+    db_con_str: SecretStr | str = "ERROR"
+    default_collection: str = None
+    model_config = SettingsConfigDict(env_file=".env")
+
+
+settings = Settings()
 logger = logging.getLogger("uvicorn.error")
+logger.error(settings)
 no_id = {"_id": 0}
 
 try:
-    uri = "mongodb://127.0.0.1/fastapi"
-    logger.error("DBCON?")
+    if settings.db_con_str == SecretStr("ERROR"):
+        raise Exception("HANDLED", "NO DB CONNECTION STRING IN CONFIG!")
+
+    uri = settings.db_con_str.get_secret_value()
+    logger.info("DBCON?")
     client = MongoClient(uri, connectTimeoutMS=2000, timeoutMS=2000)
     client.server_info()
     db = client.get_database()
-    booksdb = db.get_collection("books")
+    booksdb = db.get_collection(settings.default_collection)
 
     # populate collection if empty
     if booksdb.find_one({}, no_id) is None:
         books_to_insert = Dummygen.gen_db_books(20)
         booksdb.insert_many(books_to_insert)
 
-except ServerSelectionTimeoutError:
-    logger.error("DATABASE IS NOT RUNNING!")
-    raise Exception("NO DB!")
+except ServerSelectionTimeoutError as e:
+    logger.critical(f"HANDLED DB ERROR: DATABASE IS NOT RUNNING!! {type(e)}")
 except Exception as e:
-    raise Exception("DB ERROR", e)
+    if e.args[0] == "HANDLED":
+        logger.critical(f"HANDLED DB ERROR: {e.args[1]} {type(e)}")
+    else:
+        logger.critical("DB ERROR", e)
 else:
     logger.error("CONNECTED")
 
@@ -119,7 +137,7 @@ def create_book(book: dict = Body(...)):
     return {"msg": "Added", "book": b}
 
 
-#for now, it requires full model to be present, partial updates not supported yet
+# for now, it requires full model to be present, partial updates not supported yet
 @app.put("/book/{ISBN}", status_code=status.HTTP_200_OK)
 def update_book_by_isbn(ISBN: str = types["ISBN"]["path"], book: dict = Body(...)):
     if len(book.keys()) == 0:
@@ -127,14 +145,34 @@ def update_book_by_isbn(ISBN: str = types["ISBN"]["path"], book: dict = Body(...
     try:
         b = Book(**book)
         before = booksdb.find_one_and_update({"ISBN": ISBN}, {"$set": b.model_dump()}, no_id)
-        return {"msg": "Nothing to update"} if (before is None or before == b) else {"msg": f"Book with ISBN {ISBN} updated"}
+        return {"msg": "Nothing to update"} if (before is None or before == b) else {
+            "msg": f"Book with ISBN {ISBN} updated"}
     except ValidationError as e:
         return JSONResponse({"error": "Validation error", "details": json.loads(e.json(include_url=False))}, 400)
     except Exception as e:
         raise Exception(f"Couldn't update a book to a db {type(e)}", e)
 
 
-# todo consider .patch for partial update
+@app.patch("/book/{ISBN}", status_code=status.HTTP_200_OK)
+def update_book_by_isbn(ISBN: str = types["ISBN"]["path"], book: dict = Body(...)):
+    if len(book.keys()) == 0:
+        return JSONResponse({"error": "Update model cannot be empty"}, 400)
+    try:
+        fromdb = booksdb.find_one({"ISBN": ISBN}, no_id)
+        before = dict(fromdb.items())
+        for key in book.copy().keys():
+            if fromdb.get(key):
+                fromdb[key] = book[key]
+            else:
+                book.pop(key, None)
+        b = Book(**fromdb)
+        booksdb.update_one({"ISBN": ISBN}, {"$set": book})
+        return {"msg": "Nothing to update"} if (fromdb is None or before == fromdb) else {
+            "msg": f"Book with ISBN {ISBN} updated"}
+    except ValidationError as e:
+        return JSONResponse({"error": "Validation error", "details": json.loads(e.json(include_url=False))}, 400)
+    except Exception as e:
+        raise Exception(f"Couldn't update a book to a db {type(e)}", e)
 
 
 @app.delete("/book/{ISBN}", status_code=status.HTTP_200_OK)
